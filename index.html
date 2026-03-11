@@ -1232,7 +1232,7 @@ async function doSetup() {
   document.getElementById('loading').classList.add('visible');
 
   try {
-    const res = await fetch('/setup', {
+    const res = await fetch('https://pera-l0e5.onrender.com/setup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1361,7 +1361,7 @@ async function sendMessage() {
 
   // If waiting for crisis reply
   if (state.waitingReply) {
-    await fetch('/crisis_reply', {
+    await fetch('https://pera-l0e5.onrender.com/crisis_reply', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ message: text })
@@ -1372,7 +1372,7 @@ async function sendMessage() {
   Avatar.setThinking();
   showTyping(true);
   try {
-    await fetch('/chat', {
+    await fetch('https://pera-l0e5.onrender.com/chat', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ message: text })
@@ -1384,7 +1384,7 @@ async function sendMessage() {
 }
 
 async function sendCommand(cmd) {
-  await fetch('/command', {
+  await fetch('https://pera-l0e5.onrender.com/command', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ cmd })
@@ -1403,7 +1403,7 @@ async function startPolling() {
                 'translated:','✅ WhatsApp'];
   setInterval(async () => {
     try {
-      const res  = await fetch('/poll');
+      const res  = await fetch('https://pera-l0e5.onrender.com/poll');
       const data = await res.json();
       for (const msg of data.messages) {
         if (msg.type === 'ai') {
@@ -1484,7 +1484,7 @@ async function startRecording() {
   micBtn.textContent = '🔴';
   document.getElementById('record-hint').classList.add('visible');
   try {
-    await fetch('/mic/start', { method: 'POST' });
+    await fetch('https://pera-l0e5.onrender.com/mic/start', { method: 'POST' });
   } catch(e) {
     addMessage('🎤 Could not start mic. Is server running?', 'system');
     state.recording = false;
@@ -1500,7 +1500,7 @@ async function stopRecording() {
   micBtn.textContent = '🎤';
   document.getElementById('record-hint').classList.remove('visible');
   try {
-    await fetch('/mic/stop', { method: 'POST' });
+    await fetch('https://pera-l0e5.onrender.com/mic/stop', { method: 'POST' });
     // Show transcribing indicator — result comes back via poll
     addMessage('⏳ Transcribing…', 'system');
   } catch(e) {}
