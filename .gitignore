@@ -1,0 +1,45 @@
+# ── Python ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# ── Sensitive / credentials ───────────────────────────
+twilio_config.py        # ← NEVER upload this (has your Twilio keys)
+twilio_2FA_recovery_code.txt
+.env
+*.env
+
+# ── Logs ──────────────────────────────────────────────
+logs/
+*.log
+
+# ── Live2D / large binary assets ──────────────────────
+*.moc3
+CubismSdkForWeb-5-r.4/
+pera_live2d.js
+
+# ── Data / memory ─────────────────────────────────────
+data/
+*.db
+*.sqlite
+
+# ── OS files ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ── Python cache ──────────────────────────────────────
+*.egg-info/
+dist/
+build/

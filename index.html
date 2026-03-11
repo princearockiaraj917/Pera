@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PERA</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   TOKENS & RESET
+═══════════════════════════════════════════════════════ */
+:root {
+  --bg-void:       #070A0F;
+  --bg-deep:       #0C1018;
+  --bg-surface:    #111520;
+  --bg-elevated:   #161C2C;
+  --bg-input:      #0F1420;
+
+  --ai-bubble:     #0F1D2E;
+  --ai-border:     #1A3050;
+  --user-bubble:   #0D1F14;
+  --user-border:   #1A3D22;
+  --crisis-bubble: #1F0A0A;
+  --crisis-border: #5C1A1A;
+
+  --text-primary:  #E2E8F8;
+  --text-secondary:#8A96B8;
+  --text-muted:    #3D4560;
+  --text-ai:       #9FC8F0;
+  --text-user:     #7DC898;
+  --text-crisis:   #F08080;
+  --text-gold:     #C9A84C;
+
+  --accent-blue:   #3A7BD5;
+  --accent-teal:   #1A8A7A;
+  --accent-amber:  #C9A84C;
+  --accent-crisis: #C0392B;
+  --accent-green:  #2ECC71;
+
+  --glow-blue:     0 0 30px rgba(58,123,213,0.15);
+  --glow-amber:    0 0 40px rgba(201,168,76,0.12);
+  --glow-crisis:   0 0 30px rgba(192,57,43,0.2);
+
+  --radius-sm:     8px;
+  --radius-md:     14px;
+  --radius-lg:     20px;
+  --radius-xl:     28px;
+
+  --font-display:  'Playfair Display', Georgia, serif;
+  --font-body:     'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
+  overflow: hidden;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1E2840; border-radius: 4px; }
+
+/* ═══════════════════════════════════════════════════════
+   AMBIENT BACKGROUND
+═══════════════════════════════════════════════════════ */
+.ambient {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  overflow: hidden;
+}
+.ambient::before {
+  content: '';
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(58,123,213,0.06) 0%, transparent 70%);
+  top: -200px; left: -100px;
+  animation: drift1 18s ease-in-out infinite alternate;
+}
+.ambient::after {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 70%);
+  bottom: -150px; right: -100px;
+  animation: drift2 22s ease-in-out infinite alternate;
+}
+@keyframes drift1 { from { transform: translate(0,0) scale(1); } to { transform: translate(60px,40px) scale(1.1); } }
+@keyframes drift2 { from { transform: translate(0,0) scale(1); } to { transform: translate(-50px,-30px) scale(1.08); } }
+
+/* ═══════════════════════════════════════════════════════
+   SETUP SCREEN
+═══════════════════════════════════════════════════════ */
+#setup-screen {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-void);
+  animation: fadeIn 0.6s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.setup-card {
+  width: 480px;
+  background: var(--bg-surface);
+  border: 1px solid #1A2240;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 40px 120px rgba(0,0,0,0.6), var(--glow-blue);
+  animation: slideUp 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+
+.setup-header {
+  padding: 40px 40px 28px;
+  background: linear-gradient(135deg, #0D1A35 0%, #0A1525 100%);
+  border-bottom: 1px solid #1A2A45;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.setup-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(58,123,213,0.18) 0%, transparent 60%);
+}
+.setup-heart {
+  font-size: 42px;
+  display: block;
+  margin-bottom: 12px;
+  animation: heartbeat 2.5s ease infinite;
+  position: relative;
+}
+@keyframes heartbeat {
+  0%,100% { transform: scale(1); }
+  14%      { transform: scale(1.15); }
+  28%      { transform: scale(1); }
+  42%      { transform: scale(1.08); }
+  56%      { transform: scale(1); }
+}
+.setup-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  position: relative;
+}
+.setup-subtitle {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  position: relative;
+}
+
+.setup-body {
+  padding: 32px 40px 36px;
+}
+
+.setup-section {
+  margin-bottom: 24px;
+}
+.setup-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+/* Radio pills */
+.pill-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  padding: 8px 20px;
+  border-radius: 100px;
+  border: 1px solid #1E2840;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.pill:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+.pill.active {
+  background: rgba(58,123,213,0.18);
+  border-color: var(--accent-blue);
+  color: #78B4F8;
+  box-shadow: 0 0 16px rgba(58,123,213,0.15);
+}
+
+/* Name input */
+.name-wrap {
+  position: relative;
+}
+.name-input {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--bg-input);
+  border: 1px solid #1A2240;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.name-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(58,123,213,0.12);
+}
+.name-input::placeholder { color: var(--text-muted); }
+
+/* Start button */
+.start-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #2A5FB8 0%, #3A7BD5 100%);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.start-btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.start-btn:hover::after { opacity: 1; }
+.start-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(58,123,213,0.35); }
+.start-btn:active { transform: translateY(0); }
+
+/* ═══════════════════════════════════════════════════════
+   MAIN APP
+═══════════════════════════════════════════════════════ */
+#app {
+  display: none;
+  position: fixed; inset: 0;
+  flex-direction: column;
+  z-index: 1;
+}
+#app.visible { display: flex; animation: fadeIn 0.5s ease; }
+
+/* ── Top bar ───────────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center;
+  padding: 0 20px;
+  height: 58px;
+  background: rgba(12,16,24,0.95);
+  border-bottom: 1px solid #111826;
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+  z-index: 10;
+  position: relative;
+}
+.topbar::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(58,123,213,0.3), transparent);
+}
+
+.companion-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1A3A6A, #2A5298);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  border: 1.5px solid #2A4A80;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(58,123,213,0.2);
+}
+
+.companion-info { margin-left: 12px; flex: 1; }
+.companion-name {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.companion-status {
+  font-size: 11px;
+  color: var(--accent-green);
+  display: flex; align-items: center; gap: 5px;
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  animation: pulse-dot 2s ease infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.8); }
+}
+
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+.lang-badge {
+  padding: 4px 12px;
+  background: rgba(58,123,213,0.15);
+  border: 1px solid rgba(58,123,213,0.25);
+  border-radius: 100px;
+  font-size: 11px; font-weight: 500;
+  color: #78B4F8;
+  letter-spacing: 0.06em;
+}
+
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.icon-btn:hover {
+  background: var(--bg-elevated);
+  border-color: #1E2840;
+  color: var(--text-primary);
+}
+
+/* ── Crisis banner ─────────────────────────────────── */
+.crisis-banner {
+  display: none;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #1A0808, #200C0C);
+  border-bottom: 1px solid var(--crisis-border);
+  text-align: center;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-crisis);
+  letter-spacing: 0.02em;
+  animation: crisisSlide 0.4s ease;
+  box-shadow: 0 4px 20px rgba(192,57,43,0.15);
+}
+.crisis-banner.visible { display: block; }
+@keyframes crisisSlide { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Body area ─────────────────────────────────────── */
+.body-area {
+  display: flex; flex: 1; overflow: hidden;
+}
+
+/* ── Chat area (right half) ────────────────────────── */
+.chat-area {
+  flex: 1; display: flex; flex-direction: column;
+  min-width: 0;
+  background: var(--bg-deep);
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 0 16px;
+  scroll-behavior: smooth;
+}
+
+/* ── Message bubbles ───────────────────────────────── */
+.msg-row {
+  display: flex;
+  padding: 4px 24px;
+  animation: msgIn 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes msgIn {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.msg-row.ai   { justify-content: flex-start; }
+.msg-row.user { justify-content: flex-end; }
+.msg-row.system { justify-content: center; }
+
+.msg-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; margin-top: 2px;
+  align-self: flex-end;
+}
+.ai .msg-avatar {
+  background: linear-gradient(135deg, #1A3A6A, #2A5298);
+  border: 1px solid #2A4A80;
+  margin-right: 10px;
+}
+.user .msg-avatar {
+  background: linear-gradient(135deg, #1A3D22, #2A5A30);
+  border: 1px solid #2A4A2A;
+  margin-left: 10px;
+  order: 2;
+}
+
+.msg-bubble {
+  max-width: 62%;
+  padding: 13px 18px;
+  border-radius: var(--radius-xl);
+  font-size: 14.5px;
+  line-height: 1.65;
+  position: relative;
+  word-wrap: break-word;
+}
+.ai .msg-bubble {
+  background: var(--ai-bubble);
+  border: 1px solid var(--ai-border);
+  color: var(--text-ai);
+  border-bottom-left-radius: var(--radius-sm);
+}
+.user .msg-bubble {
+  background: var(--user-bubble);
+  border: 1px solid var(--user-border);
+  color: var(--text-user);
+  border-bottom-right-radius: var(--radius-sm);
+}
+.crisis-msg .msg-bubble {
+  background: var(--crisis-bubble);
+  border: 1px solid var(--crisis-border);
+  color: var(--text-crisis);
+  max-width: 72%;
+  box-shadow: var(--glow-crisis);
+}
+
+.msg-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-align: right;
+}
+.ai .msg-time { text-align: left; padding-left: 40px; }
+.user .msg-time { text-align: right; }
+
+.system-msg {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 3px 12px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 100px;
+  letter-spacing: 0.03em;
+}
+
+/* POV label */
+.pov-label {
+  display: none;
+  margin: 8px 24px;
+  padding: 7px 16px;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-gold);
+  text-align: center;
+}
+.pov-label.visible { display: block; animation: fadeIn 0.3s ease; }
+
+/* ── Typing indicator ──────────────────────────────── */
+.typing-row {
+  display: none;
+  padding: 4px 24px;
+  align-items: center;
+  gap: 10px;
+}
+.typing-row.visible { display: flex; animation: msgIn 0.3s ease; }
+.typing-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1A3A6A, #2A5298);
+  border: 1px solid #2A4A80;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.typing-bubble {
+  background: var(--ai-bubble);
+  border: 1px solid var(--ai-border);
+  border-radius: var(--radius-xl);
+  border-bottom-left-radius: var(--radius-sm);
+  padding: 13px 18px;
+  display: flex; gap: 5px; align-items: center;
+}
+.typing-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  opacity: 0.4;
+  animation: typingBounce 1.4s ease infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce {
+  0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+  30%          { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ── Speaking indicator ────────────────────────────── */
+.speaking-wave {
+  display: none;
+  align-items: center; gap: 2px;
+  margin-left: 4px;
+}
+.speaking-wave.visible { display: flex; }
+.wave-bar {
+  width: 3px;
+  background: var(--accent-blue);
+  border-radius: 2px;
+  animation: waveAnim 0.9s ease infinite;
+}
+.wave-bar:nth-child(1) { height: 6px; animation-delay: 0s; }
+.wave-bar:nth-child(2) { height: 10px; animation-delay: 0.1s; }
+.wave-bar:nth-child(3) { height: 14px; animation-delay: 0.2s; }
+.wave-bar:nth-child(4) { height: 10px; animation-delay: 0.15s; }
+.wave-bar:nth-child(5) { height: 6px; animation-delay: 0.05s; }
+@keyframes waveAnim {
+  0%,100% { transform: scaleY(0.4); opacity: 0.5; }
+  50%      { transform: scaleY(1); opacity: 1; }
+}
+
+/* ── Input bar ─────────────────────────────────────── */
+.input-bar {
+  padding: 14px 20px;
+  background: rgba(10,13,20,0.95);
+  border-top: 1px solid #111826;
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+
+.input-wrap {
+  flex: 1;
+  position: relative;
+  display: flex; align-items: center;
+  background: var(--bg-input);
+  border: 1px solid #1A2240;
+  border-radius: var(--radius-xl);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+.input-wrap:focus-within {
+  border-color: rgba(58,123,213,0.5);
+  box-shadow: 0 0 0 3px rgba(58,123,213,0.08);
+}
+.chat-input {
+  flex: 1;
+  padding: 13px 18px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14.5px;
+}
+.chat-input::placeholder { color: var(--text-muted); }
+
+.speaking-wave-input {
+  margin-right: 12px;
+}
+
+.send-btn {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2A5FB8, #3A7BD5);
+  border: none;
+  color: white;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(58,123,213,0.3);
+}
+.send-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(58,123,213,0.45); }
+.send-btn:active { transform: scale(0.96); }
+
+/* Mic button */
+.mic-btn {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid #1E2840;
+  color: var(--text-secondary);
+  font-size: 17px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  position: relative;
+  user-select: none;
+}
+.mic-btn:hover { background: #1E2840; color: var(--text-primary); }
+.mic-btn.recording {
+  background: rgba(192,57,43,0.2);
+  border-color: var(--accent-crisis);
+  color: #FF6B6B;
+  animation: micPulse 0.8s ease infinite;
+}
+@keyframes micPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(192,57,43,0); }
+}
+
+/* ── Settings sidebar ──────────────────────────────── */
+.settings-panel {
+  width: 0;
+  overflow: hidden;
+  background: var(--bg-surface);
+  border-left: 1px solid #111826;
+  transition: width 0.3s cubic-bezier(0.16,1,0.3,1);
+  flex-shrink: 0;
+  display: flex; flex-direction: column;
+}
+.settings-panel.open { width: 260px; }
+
+.settings-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #111826;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.settings-title {
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.settings-close {
+  background: none; border: none;
+  color: var(--text-muted);
+  font-size: 18px; cursor: pointer;
+  transition: color 0.15s;
+  line-height: 1;
+}
+.settings-close:hover { color: var(--text-primary); }
+
+.settings-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+.settings-section {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 18px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #111826;
+}
+.settings-section:first-child { margin-top: 4px; }
+.settings-btn {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 9px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  margin-bottom: 2px;
+}
+.settings-btn:hover {
+  background: var(--bg-elevated);
+  border-color: #1E2840;
+  color: var(--text-primary);
+}
+.settings-info {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+/* ═══════════════════════════════════════════════════════
+   LOADING OVERLAY
+═══════════════════════════════════════════════════════ */
+.loading-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(7,10,15,0.85);
+  backdrop-filter: blur(8px);
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 20px;
+}
+.loading-overlay.visible { display: flex; }
+.loading-spinner {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2px solid #1A2240;
+  border-top-color: var(--accent-blue);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 14px; color: var(--text-secondary);
+  font-family: var(--font-display); font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RECORD HINT
+═══════════════════════════════════════════════════════ */
+.record-hint {
+  position: fixed;
+  bottom: 80px; left: 50%; transform: translateX(-50%);
+  display: none;
+  padding: 10px 24px;
+  background: rgba(192,57,43,0.15);
+  border: 1px solid var(--crisis-border);
+  border-radius: 100px;
+  color: #FF8A80;
+  font-size: 13px;
+  z-index: 50;
+  animation: fadeIn 0.2s ease;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+.record-hint.visible { display: block; }
+
+
+/* ═══════════════════════════════════════════════════════
+   AVATAR PANEL
+═══════════════════════════════════════════════════════ */
+.avatar-panel {
+  width: 42%;
+  flex-shrink: 0;
+  background: linear-gradient(160deg, #080D16 0%, #0C1420 50%, #080D16 100%);
+  border-right: 1px solid #111826;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Radial glow behind avatar */
+.avatar-panel::before {
+  content: '';
+  position: absolute;
+  width: 420px; height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(58,123,213,0.10) 0%, transparent 70%);
+  bottom: -60px; left: 50%; transform: translateX(-50%);
+  transition: background 0.5s;
+}
+.avatar-panel.speaking::before {
+  background: radial-gradient(circle, rgba(58,123,213,0.22) 0%, transparent 65%);
+  animation: glowPulse 1.2s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%,100% { transform: translateX(-50%) scale(1);   opacity: 1; }
+  50%      { transform: translateX(-50%) scale(1.08); opacity: 0.8; }
+}
+
+/* Floor reflection line */
+.avatar-panel::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(58,123,213,0.3), transparent);
+}
+
+/* Name badge above avatar */
+.avatar-name-badge {
+  position: absolute;
+  top: 28px;
+  left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  z-index: 2;
+}
+.avatar-name {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  text-shadow: 0 0 30px rgba(58,123,213,0.4);
+}
+.avatar-tagline {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+/* The avatar image itself */
+.avatar-img-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 1;
+  padding-bottom: 0;
+}
+.avatar-img {
+  height: 68vh;
+  max-height: 520px;
+  object-fit: contain;
+  object-position: bottom;
+  filter: drop-shadow(0 20px 50px rgba(0,0,0,0.6));
+  transition: transform 0.3s ease;
+  transform-origin: bottom center;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Idle float animation */
+.avatar-img.idle {
+  animation: avatarFloat 4s ease-in-out infinite;
+}
+@keyframes avatarFloat {
+  0%,100% { transform: translateY(0px); }
+  50%      { transform: translateY(-10px); }
+}
+
+/* Speaking animation — subtle body sway + scale bounce */
+.avatar-img.speaking {
+  animation: avatarSpeak 0.55s ease-in-out infinite alternate;
+}
+@keyframes avatarSpeak {
+  0%   { transform: translateY(0px) rotate(-0.8deg) scale(1); }
+  100% { transform: translateY(-6px) rotate(0.8deg) scale(1.01); }
+}
+
+/* Speech bubble above avatar */
+.speech-bubble {
+  position: absolute;
+  bottom: calc(68vh + 10px);
+  left: 50%; transform: translateX(-50%);
+  max-width: 76%;
+  background: rgba(15,25,46,0.92);
+  border: 1px solid rgba(58,123,213,0.3);
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-ai);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(58,123,213,0.08);
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  z-index: 3;
+  pointer-events: none;
+  max-height: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+.speech-bubble.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+/* Bubble tail */
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px; left: 22px;
+  border: 8px solid transparent;
+  border-top-color: rgba(58,123,213,0.3);
+  border-bottom: none;
+}
+
+/* Speaking wave bars inside avatar panel bottom */
+.avatar-wave {
+  position: absolute;
+  bottom: 20px;
+  left: 50%; transform: translateX(-50%);
+  display: none;
+  gap: 3px;
+  align-items: flex-end;
+  z-index: 2;
+}
+.avatar-wave.visible { display: flex; }
+.avatar-wave .wave-bar {
+  width: 4px;
+  background: var(--accent-blue);
+  border-radius: 3px;
+  opacity: 0.7;
+}
+
+/* Status pill */
+.avatar-status {
+  position: absolute;
+  top: 100px;
+  left: 50%; transform: translateX(-50%);
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  border: 1px solid #1E2840;
+  background: rgba(12,16,24,0.8);
+  color: var(--text-secondary);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.avatar-status.speaking-status {
+  border-color: rgba(58,123,213,0.4);
+  color: #78B4F8;
+  background: rgba(26,48,80,0.6);
+}
+.avatar-status.thinking-status {
+  border-color: rgba(201,168,76,0.3);
+  color: var(--text-gold);
+}
+
+
+
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+
+<!-- ═══════════ SETUP SCREEN ═══════════ -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-header">
+      <span class="setup-heart">💙</span>
+      <div class="setup-title">PERA</div>
+      <div class="setup-subtitle">உங்கள் நண்பன் — பேரா | Your friend, always here.</div>
+    </div>
+    <div class="setup-body">
+
+      <div class="setup-section">
+        <div class="setup-label">🌐 Language / மொழி</div>
+        <div class="pill-group">
+          <div class="pill active" data-group="lang" data-val="en">English</div>
+          <div class="pill" data-group="lang" data-val="ta">தமிழ் (Tamil)</div>
+        </div>
+      </div>
+
+      <div class="setup-section">
+        <div class="setup-label">🎙 Voice / குரல்</div>
+        <div class="pill-group">
+          <div class="pill active" data-group="voice" data-val="female">♀ Female</div>
+          <div class="pill" data-group="voice" data-val="male">♂ Male</div>
+          <div class="pill" data-group="voice" data-val="off">🔇 Off</div>
+        </div>
+      </div>
+
+      <div class="setup-section">
+        <div class="setup-label">👤 What should I call you?</div>
+        <div class="name-wrap">
+          <input class="name-input" id="name-input"
+                 placeholder="Enter your name..."
+                 autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+
+      <button class="start-btn" id="start-btn">
+        Start talking &nbsp;→
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ LOADING ═══════════ -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Connecting to your companion…</div>
+</div>
+
+<!-- ═══════════ MAIN APP ═══════════ -->
+<div id="app">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="companion-avatar">💙</div>
+    <div class="companion-info">
+      <div class="companion-name">PERA</div>
+      <div class="companion-status">
+        <span class="status-dot"></span>
+        <span id="status-text">Online</span>
+        <div class="speaking-wave" id="speaking-wave">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="lang-badge" id="lang-badge">EN</div>
+      <button class="icon-btn" id="settings-toggle" title="Settings">⚙</button>
+    </div>
+  </div>
+
+  <!-- Crisis banner -->
+  <div class="crisis-banner" id="crisis-banner">
+    🆘&nbsp; If you need immediate help: &nbsp;📞 <strong>14416</strong> — Tamil Nadu Mental Health &nbsp;|&nbsp; 📞 <strong>104</strong> — Health Helpline
+  </div>
+
+  <!-- Body -->
+  <div class="body-area">
+
+    <!-- ═══ AVATAR PANEL (left half) ═══ -->
+    <div class="avatar-panel" id="avatar-panel">
+      <div class="avatar-name-badge">
+        <div class="avatar-name">PERA</div>
+        <div class="avatar-tagline" id="avatar-tagline">உங்கள் நண்பன் · Your friend</div>
+      </div>
+
+      <!-- Speech bubble -->
+      <div class="speech-bubble" id="speech-bubble"></div>
+
+      <!-- Avatar image — swapped by JS based on voice gender -->
+      <div class="avatar-img-wrap">
+        <img class="avatar-img idle" id="avatar-img" src="" alt="PERA avatar">
+      </div>
+
+      <!-- Speaking wave at feet -->
+      <div class="avatar-wave" id="avatar-wave">
+        <div class="wave-bar" style="height:6px"></div>
+        <div class="wave-bar" style="height:12px"></div>
+        <div class="wave-bar" style="height:18px"></div>
+        <div class="wave-bar" style="height:24px"></div>
+        <div class="wave-bar" style="height:18px"></div>
+        <div class="wave-bar" style="height:12px"></div>
+        <div class="wave-bar" style="height:6px"></div>
+      </div>
+
+      <!-- Status pill -->
+      <div class="avatar-status" id="avatar-status">● Listening</div>
+    </div>
+
+    <!-- ═══ CHAT COLUMN (right half) ═══ -->
+    <div class="chat-area">
+      <div class="messages" id="messages">
+
+        <!-- POV label -->
+        <div class="pov-label" id="pov-label"></div>
+
+        <!-- Typing indicator -->
+        <div class="typing-row" id="typing-row">
+          <div class="typing-avatar">💙</div>
+          <div class="typing-bubble">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Input bar -->
+      <div class="input-bar">
+        <button class="mic-btn" id="mic-btn" title="Hold to speak">🎤</button>
+        <div class="input-wrap">
+          <input class="chat-input" id="chat-input"
+                 placeholder="Type here…"
+                 autocomplete="off" spellcheck="false">
+          <div class="speaking-wave speaking-wave-input" id="speaking-wave-input">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+          </div>
+        </div>
+        <button class="send-btn" id="send-btn">➤</button>
+      </div>
+    </div>
+
+    <!-- Settings sidebar -->
+    <div class="settings-panel" id="settings-panel">
+      <div class="settings-header">
+        <span class="settings-title">Settings</span>
+        <button class="settings-close" id="settings-close">✕</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-section">🎙 Voice Output</div>
+        <button class="settings-btn" onclick="sendCommand('voice female')">♀ &nbsp; Female voice</button>
+        <button class="settings-btn" onclick="sendCommand('voice male')">♂ &nbsp; Male voice</button>
+        <button class="settings-btn" onclick="sendCommand('voice off')">🔇 &nbsp; Turn voice off</button>
+        <button class="settings-btn" onclick="sendCommand('voice on')">🔊 &nbsp; Turn voice on</button>
+
+        <div class="settings-section">💬 Conversation</div>
+        <button class="settings-btn" onclick="sendCommand('clear'); closeSettings()">🗑 &nbsp; Clear conversation</button>
+        <button class="settings-btn" onclick="sendCommand('memory')">📖 &nbsp; Show memory</button>
+
+        <div class="settings-info">
+          <strong style="color:var(--text-secondary)">Emergency helplines</strong><br>
+          📞 14416 &nbsp; Tamil Nadu Mental Health<br>
+          📞 104 &nbsp;&nbsp;&nbsp; Health Helpline<br><br>
+          <span style="color:#3D4560">Both are free & 24/7</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Record hint -->
+<div class="record-hint" id="record-hint">🔴 &nbsp; Recording… release to send</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+const state = {
+  lang: 'en', voiceGender: 'female', voiceOn: true,
+  name: '', inCrisis: false, waitingReply: false,
+  recording: false, mediaStream: null, mediaRecorder: null,
+  audioChunks: [], isSpeaking: false,
+};
+
+// ── AVATAR SVG DATA ──────────────────────────────────────────────────────────
+// Boy avatar (male voice) — warm saffron dhoti Indian cartoon boy
+const AVATAR_MALE = 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20300%20500%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22skinM%22%20cx%3D%2250%25%22%20cy%3D%2235%25%22%20r%3D%2255%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23D4956A%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23B8734A%22/%3E%0A%20%20%20%20%3C/radialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22bgM%22%20cx%3D%2250%25%22%20cy%3D%22100%25%22%20r%3D%2280%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22rgba%2858%2C123%2C213%2C0.08%29%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22rgba%280%2C0%2C0%2C0%29%22/%3E%0A%20%20%20%20%3C/radialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22shirtM%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%231E3A6E%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23152B52%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22pantM%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%231C2333%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23111820%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22faceShad%22%3E%0A%20%20%20%20%20%20%3CfeDropShadow%20dx%3D%222%22%20dy%3D%224%22%20stdDeviation%3D%226%22%20flood-color%3D%22%23000%22%20flood-opacity%3D%220.25%22/%3E%0A%20%20%20%20%3C/filter%3E%0A%20%20%20%20%3Cfilter%20id%3D%22bodyShad%22%3E%0A%20%20%20%20%20%20%3CfeDropShadow%20dx%3D%222%22%20dy%3D%228%22%20stdDeviation%3D%2210%22%20flood-color%3D%22%23000%22%20flood-opacity%3D%220.3%22/%3E%0A%20%20%20%20%3C/filter%3E%0A%20%20%3C/defs%3E%0A%0A%20%20%3C%21--%20ambient%20ground%20glow%20--%3E%0A%20%20%3Cellipse%20cx%3D%22150%22%20cy%3D%22490%22%20rx%3D%2290%22%20ry%3D%2216%22%20fill%3D%22url%28%23bgM%29%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20LEGS%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Crect%20x%3D%2298%22%20y%3D%22318%22%20width%3D%2242%22%20height%3D%22140%22%20rx%3D%2216%22%20fill%3D%22url%28%23pantM%29%22/%3E%0A%20%20%3Crect%20x%3D%22158%22%20y%3D%22318%22%20width%3D%2242%22%20height%3D%22140%22%20rx%3D%2216%22%20fill%3D%22url%28%23pantM%29%22/%3E%0A%20%20%3C%21--%20subtle%20leg%20crease%20--%3E%0A%20%20%3Cline%20x1%3D%22119%22%20y1%3D%22340%22%20x2%3D%22119%22%20y2%3D%22440%22%20stroke%3D%22%230A0F18%22%20stroke-width%3D%221.5%22%20opacity%3D%220.4%22/%3E%0A%20%20%3Cline%20x1%3D%22179%22%20y1%3D%22340%22%20x2%3D%22179%22%20y2%3D%22440%22%20stroke%3D%22%230A0F18%22%20stroke-width%3D%221.5%22%20opacity%3D%220.4%22/%3E%0A%20%20%3C%21--%20shoes%20--%3E%0A%20%20%3Crect%20x%3D%2286%22%20%20y%3D%22444%22%20width%3D%2258%22%20height%3D%2220%22%20rx%3D%2210%22%20fill%3D%22%23111%22/%3E%0A%20%20%3Crect%20x%3D%22156%22%20y%3D%22444%22%20width%3D%2258%22%20height%3D%2220%22%20rx%3D%2210%22%20fill%3D%22%23111%22/%3E%0A%20%20%3Crect%20x%3D%2286%22%20%20y%3D%22444%22%20width%3D%2230%22%20height%3D%2220%22%20rx%3D%2210%22%20fill%3D%22%231A1A1A%22/%3E%0A%20%20%3Crect%20x%3D%22156%22%20y%3D%22444%22%20width%3D%2230%22%20height%3D%2220%22%20rx%3D%2210%22%20fill%3D%22%231A1A1A%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20TORSO%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Crect%20x%3D%2284%22%20y%3D%22200%22%20width%3D%22132%22%20height%3D%22128%22%20rx%3D%2222%22%20fill%3D%22url%28%23shirtM%29%22%20filter%3D%22url%28%23bodyShad%29%22/%3E%0A%20%20%3C%21--%20shirt%20collar%20V%20--%3E%0A%20%20%3Cpath%20d%3D%22M140%20202%20L150%20228%20L160%20202%22%20fill%3D%22%23162444%22%20stroke%3D%22%23162444%22%20stroke-width%3D%221%22/%3E%0A%20%20%3C%21--%20shirt%20chest%20seam%20--%3E%0A%20%20%3Cline%20x1%3D%22150%22%20y1%3D%22228%22%20x2%3D%22150%22%20y2%3D%22326%22%20stroke%3D%22%23162444%22%20stroke-width%3D%222%22%20opacity%3D%220.5%22/%3E%0A%20%20%3C%21--%20shirt%20bottom%20hem%20--%3E%0A%20%20%3Crect%20x%3D%2284%22%20y%3D%22316%22%20width%3D%22132%22%20height%3D%2212%22%20rx%3D%220%22%20fill%3D%22%23111E38%22%20opacity%3D%220.6%22/%3E%0A%20%20%3C%21--%20pocket%20detail%20--%3E%0A%20%20%3Crect%20x%3D%2296%22%20y%3D%22230%22%20width%3D%2228%22%20height%3D%2222%22%20rx%3D%224%22%20fill%3D%22none%22%20stroke%3D%22%232A4A80%22%20stroke-width%3D%221.5%22%20opacity%3D%220.6%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20ARMS%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3C%21--%20left%20arm%20--%3E%0A%20%20%3Cpath%20d%3D%22M84%20215%20Q58%20240%2052%20290%22%20stroke%3D%22%23C4855A%22%20stroke-width%3D%2226%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M84%20215%20Q58%20240%2052%20290%22%20stroke%3D%22%231E3A6E%22%20stroke-width%3D%2230%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.9%22/%3E%0A%20%20%3Cpath%20d%3D%22M84%20215%20Q58%20240%2052%20290%22%20stroke%3D%22%23C4855A%22%20stroke-width%3D%2222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20left%20hand%20--%3E%0A%20%20%3Cellipse%20cx%3D%2250%22%20cy%3D%22298%22%20rx%3D%2216%22%20ry%3D%2214%22%20fill%3D%22%23C4855A%22/%3E%0A%20%20%3Cpath%20d%3D%22M38%20294%20Q34%20286%2040%20282%22%20stroke%3D%22%23B07040%22%20stroke-width%3D%224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M64%20294%20Q68%20286%2062%20282%22%20stroke%3D%22%23B07040%22%20stroke-width%3D%224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M44%20306%20Q40%20314%2046%20316%22%20stroke%3D%22%23B07040%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M58%20306%20Q62%20314%2056%20316%22%20stroke%3D%22%23B07040%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%0A%20%20%3C%21--%20right%20arm%20--%3E%0A%20%20%3Cpath%20d%3D%22M216%20215%20Q242%20240%20248%20290%22%20stroke%3D%22%23C4855A%22%20stroke-width%3D%2226%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M216%20215%20Q242%20240%20248%20290%22%20stroke%3D%22%231E3A6E%22%20stroke-width%3D%2230%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.9%22/%3E%0A%20%20%3Cpath%20d%3D%22M216%20215%20Q242%20240%20248%20290%22%20stroke%3D%22%23C4855A%22%20stroke-width%3D%2222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20right%20hand%20--%3E%0A%20%20%3Cellipse%20cx%3D%22250%22%20cy%3D%22298%22%20rx%3D%2216%22%20ry%3D%2214%22%20fill%3D%22%23C4855A%22/%3E%0A%20%20%3Cpath%20d%3D%22M238%20294%20Q234%20286%20240%20282%22%20stroke%3D%22%23B07040%22%20stroke-width%3D%224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M264%20294%20Q268%20286%20262%20282%22%20stroke%3D%22%23B07040%22%20stroke-width%3D%224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20NECK%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Crect%20x%3D%22132%22%20y%3D%22162%22%20width%3D%2236%22%20height%3D%2242%22%20rx%3D%2212%22%20fill%3D%22url%28%23skinM%29%22/%3E%0A%20%20%3C%21--%20neck%20shadow%20--%3E%0A%20%20%3Crect%20x%3D%22132%22%20y%3D%22185%22%20width%3D%2236%22%20height%3D%2219%22%20rx%3D%220%22%20fill%3D%22%23A06040%22%20opacity%3D%220.3%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20HEAD%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cellipse%20cx%3D%22150%22%20cy%3D%22118%22%20rx%3D%2262%22%20ry%3D%2268%22%20fill%3D%22url%28%23skinM%29%22%20filter%3D%22url%28%23faceShad%29%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20JAW%20/%20CHIN%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M96%20138%20Q98%20168%20150%20178%20Q202%20168%20204%20138%22%20fill%3D%22url%28%23skinM%29%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20EARS%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cellipse%20cx%3D%2288%22%20cy%3D%22122%22%20rx%3D%2210%22%20ry%3D%2214%22%20fill%3D%22%23C4855A%22/%3E%0A%20%20%3Cellipse%20cx%3D%2288%22%20cy%3D%22122%22%20rx%3D%225%22%20%20ry%3D%229%22%20%20fill%3D%22%23B07040%22%20opacity%3D%220.5%22/%3E%0A%20%20%3Cellipse%20cx%3D%22212%22%20cy%3D%22122%22%20rx%3D%2210%22%20ry%3D%2214%22%20fill%3D%22%23C4855A%22/%3E%0A%20%20%3Cellipse%20cx%3D%22212%22%20cy%3D%22122%22%20rx%3D%225%22%20%20ry%3D%229%22%20%20fill%3D%22%23B07040%22%20opacity%3D%220.5%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20HAIR%20%E2%80%94%20short%20neat%20side-parted%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M88%2086%20Q90%2038%20150%2030%20Q210%2038%20212%2086%20Q198%2050%20150%2046%20Q102%2050%2088%2086%20Z%22%20fill%3D%22%231C0E06%22/%3E%0A%20%20%3C%21--%20hair%20volume%20top%20--%3E%0A%20%20%3Cpath%20d%3D%22M108%2038%20Q150%2024%20192%2038%20Q175%2032%20150%2030%20Q125%2032%20108%2038%20Z%22%20fill%3D%22%232A1208%22/%3E%0A%20%20%3C%21--%20side%20part%20line%20--%3E%0A%20%20%3Cpath%20d%3D%22M130%2030%20Q128%2048%20126%2062%22%20stroke%3D%22%232A1208%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20opacity%3D%220.6%22/%3E%0A%20%20%3C%21--%20hair%20side%20left%20--%3E%0A%20%20%3Cpath%20d%3D%22M88%2086%20Q80%20100%2082%20120%22%20stroke%3D%22%231C0E06%22%20stroke-width%3D%2214%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20hair%20side%20right%20--%3E%0A%20%20%3Cpath%20d%3D%22M212%2086%20Q220%20100%20218%20120%22%20stroke%3D%22%231C0E06%22%20stroke-width%3D%2214%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20hair%20highlight%20--%3E%0A%20%20%3Cpath%20d%3D%22M138%2032%20Q158%2028%20174%2034%22%20stroke%3D%22%233D1E0A%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20opacity%3D%220.7%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20EYEBROWS%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M104%2088%20Q118%2082%20132%2088%22%20stroke%3D%22%231C0E06%22%20stroke-width%3D%224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M168%2088%20Q182%2082%20196%2088%22%20stroke%3D%22%231C0E06%22%20stroke-width%3D%224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20EYES%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3C%21--%20eye%20whites%20--%3E%0A%20%20%3Cellipse%20cx%3D%22118%22%20cy%3D%22106%22%20rx%3D%2216%22%20ry%3D%2214%22%20fill%3D%22white%22/%3E%0A%20%20%3Cellipse%20cx%3D%22182%22%20cy%3D%22106%22%20rx%3D%2216%22%20ry%3D%2214%22%20fill%3D%22white%22/%3E%0A%20%20%3C%21--%20upper%20eyelid%20shadow%20--%3E%0A%20%20%3Cpath%20d%3D%22M102%2099%20Q118%2094%20134%2099%22%20fill%3D%22%23E8C0A0%22%20opacity%3D%220.3%22/%3E%0A%20%20%3Cpath%20d%3D%22M166%2099%20Q182%2094%20198%2099%22%20fill%3D%22%23E8C0A0%22%20opacity%3D%220.3%22/%3E%0A%20%20%3C%21--%20iris%20--%3E%0A%20%20%3Ccircle%20cx%3D%22118%22%20cy%3D%22107%22%20r%3D%229%22%20%20fill%3D%22%233D1A08%22/%3E%0A%20%20%3Ccircle%20cx%3D%22182%22%20cy%3D%22107%22%20r%3D%229%22%20%20fill%3D%22%233D1A08%22/%3E%0A%20%20%3C%21--%20pupil%20--%3E%0A%20%20%3Ccircle%20cx%3D%22119%22%20cy%3D%22108%22%20r%3D%225%22%20%20fill%3D%22%230A0604%22/%3E%0A%20%20%3Ccircle%20cx%3D%22183%22%20cy%3D%22108%22%20r%3D%225%22%20%20fill%3D%22%230A0604%22/%3E%0A%20%20%3C%21--%20eye%20shine%20--%3E%0A%20%20%3Ccircle%20cx%3D%22123%22%20cy%3D%22103%22%20r%3D%223%22%20%20fill%3D%22white%22%20opacity%3D%220.9%22/%3E%0A%20%20%3Ccircle%20cx%3D%22187%22%20cy%3D%22103%22%20r%3D%223%22%20%20fill%3D%22white%22%20opacity%3D%220.9%22/%3E%0A%20%20%3Ccircle%20cx%3D%22115%22%20cy%3D%22111%22%20r%3D%221.5%22%20fill%3D%22white%22%20opacity%3D%220.4%22/%3E%0A%20%20%3Ccircle%20cx%3D%22179%22%20cy%3D%22111%22%20r%3D%221.5%22%20fill%3D%22white%22%20opacity%3D%220.4%22/%3E%0A%20%20%3C%21--%20eyelashes%20top%20--%3E%0A%20%20%3Cpath%20d%3D%22M102%20100%20Q118%2095%20134%20100%22%20stroke%3D%22%231C0E06%22%20stroke-width%3D%222.5%22%20fill%3D%22none%22/%3E%0A%20%20%3Cpath%20d%3D%22M166%20100%20Q182%2095%20198%20100%22%20stroke%3D%22%231C0E06%22%20stroke-width%3D%222.5%22%20fill%3D%22none%22/%3E%0A%20%20%3C%21--%20lower%20lash%20line%20--%3E%0A%20%20%3Cpath%20d%3D%22M104%20114%20Q118%20119%20132%20114%22%20stroke%3D%22%23C4855A%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.6%22/%3E%0A%20%20%3Cpath%20d%3D%22M168%20114%20Q182%20119%20196%20114%22%20stroke%3D%22%23C4855A%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.6%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20NOSE%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M142%20118%20Q138%20136%20144%20140%20Q150%20144%20156%20140%20Q162%20136%20158%20118%22%20stroke%3D%22%23A86840%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Ccircle%20cx%3D%22144%22%20cy%3D%22139%22%20r%3D%224%22%20fill%3D%22%23B87050%22%20opacity%3D%220.35%22/%3E%0A%20%20%3Ccircle%20cx%3D%22156%22%20cy%3D%22139%22%20r%3D%224%22%20fill%3D%22%23B87050%22%20opacity%3D%220.35%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20MOUTH%20%E2%80%94%20calm%20natural%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M126%20158%20Q150%20170%20174%20158%22%20stroke%3D%22%238B4020%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20lips%20--%3E%0A%20%20%3Cpath%20d%3D%22M130%20159%20Q150%20166%20170%20159%22%20fill%3D%22%23C87060%22%20opacity%3D%220.4%22/%3E%0A%20%20%3C%21--%20subtle%20smile%20lines%20--%3E%0A%20%20%3Cpath%20d%3D%22M124%20157%20Q120%20162%20122%20167%22%20stroke%3D%22%23A86040%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.5%22/%3E%0A%20%20%3Cpath%20d%3D%22M176%20157%20Q180%20162%20178%20167%22%20stroke%3D%22%23A86040%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.5%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20CHEEKS%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cellipse%20cx%3D%22100%22%20cy%3D%22132%22%20rx%3D%2216%22%20ry%3D%2210%22%20fill%3D%22%23D88060%22%20opacity%3D%220.18%22/%3E%0A%20%20%3Cellipse%20cx%3D%22200%22%20cy%3D%22132%22%20rx%3D%2216%22%20ry%3D%2210%22%20fill%3D%22%23D88060%22%20opacity%3D%220.18%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20FACIAL%20HAIR%20%E2%80%94%20subtle%20stubble%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M126%20158%20Q150%20175%20174%20158%20Q168%20172%20150%20176%20Q132%20172%20126%20158%20Z%22%20fill%3D%22%231C0E06%22%20opacity%3D%220.08%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20BELT%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Crect%20x%3D%2284%22%20y%3D%22316%22%20width%3D%22132%22%20height%3D%2214%22%20rx%3D%224%22%20fill%3D%22%230A0F18%22/%3E%0A%20%20%3Crect%20x%3D%22140%22%20y%3D%22314%22%20width%3D%2220%22%20height%3D%2218%22%20rx%3D%223%22%20fill%3D%22%232A2A2A%22/%3E%0A%20%20%3Crect%20x%3D%22144%22%20y%3D%22318%22%20width%3D%2212%22%20height%3D%2210%22%20rx%3D%222%22%20fill%3D%22%23888%22%20opacity%3D%220.8%22/%3E%0A%3C/svg%3E';
+
+// Girl avatar (female voice) — Indian girl in blue lehenga with flower
+const AVATAR_FEMALE = 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20300%20500%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22skinF%22%20cx%3D%2250%25%22%20cy%3D%2235%25%22%20r%3D%2255%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23DCAA82%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23C08858%22/%3E%0A%20%20%20%20%3C/radialGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22bgF%22%20cx%3D%2250%25%22%20cy%3D%22100%25%22%20r%3D%2280%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22rgba%2858%2C123%2C213%2C0.08%29%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22rgba%280%2C0%2C0%2C0%29%22/%3E%0A%20%20%20%20%3C/radialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22topF%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%232A4A8A%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%231A3060%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22skirtF%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220.2%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%231E3A70%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23122248%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22faceShadF%22%3E%0A%20%20%20%20%20%20%3CfeDropShadow%20dx%3D%222%22%20dy%3D%224%22%20stdDeviation%3D%226%22%20flood-color%3D%22%23000%22%20flood-opacity%3D%220.2%22/%3E%0A%20%20%20%20%3C/filter%3E%0A%20%20%20%20%3Cfilter%20id%3D%22bodyShadF%22%3E%0A%20%20%20%20%20%20%3CfeDropShadow%20dx%3D%222%22%20dy%3D%228%22%20stdDeviation%3D%2210%22%20flood-color%3D%22%23000%22%20flood-opacity%3D%220.25%22/%3E%0A%20%20%20%20%3C/filter%3E%0A%20%20%3C/defs%3E%0A%0A%20%20%3C%21--%20ambient%20ground%20glow%20--%3E%0A%20%20%3Cellipse%20cx%3D%22150%22%20cy%3D%22490%22%20rx%3D%2280%22%20ry%3D%2214%22%20fill%3D%22url%28%23bgF%29%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20SKIRT%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M88%20260%20Q72%20350%2064%20468%20Q150%20482%20236%20468%20Q228%20350%20212%20260%20Z%22%20fill%3D%22url%28%23skirtF%29%22%20filter%3D%22url%28%23bodyShadF%29%22/%3E%0A%20%20%3C%21--%20skirt%20folds%20--%3E%0A%20%20%3Cpath%20d%3D%22M106%20270%20Q100%20360%2096%20455%22%20stroke%3D%22%230E1C3A%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20opacity%3D%220.45%22/%3E%0A%20%20%3Cpath%20d%3D%22M150%20265%20Q150%20355%20150%20460%22%20stroke%3D%22%230E1C3A%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20opacity%3D%220.35%22/%3E%0A%20%20%3Cpath%20d%3D%22M194%20270%20Q200%20360%20204%20455%22%20stroke%3D%22%230E1C3A%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20opacity%3D%220.45%22/%3E%0A%20%20%3C%21--%20skirt%20hem%20--%3E%0A%20%20%3Cpath%20d%3D%22M64%20462%20Q150%20476%20236%20462%20Q228%20472%20236%20468%20Q150%20482%2064%20468%20Z%22%20fill%3D%22%231A3060%22%20opacity%3D%220.8%22/%3E%0A%20%20%3C%21--%20waistband%20--%3E%0A%20%20%3Crect%20x%3D%2288%22%20y%3D%22256%22%20width%3D%22124%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%231A3060%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20TOP%20/%20BLOUSE%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M92%20182%20Q90%20260%20106%20264%20Q150%20272%20194%20264%20Q210%20260%20208%20182%20Q182%20168%20150%20165%20Q118%20168%2092%20182%20Z%22%20fill%3D%22url%28%23topF%29%22%20filter%3D%22url%28%23bodyShadF%29%22/%3E%0A%20%20%3C%21--%20neckline%20--%3E%0A%20%20%3Cpath%20d%3D%22M124%20166%20Q150%20180%20176%20166%22%20fill%3D%22%23162450%22%20stroke%3D%22%23162450%22%20stroke-width%3D%221%22/%3E%0A%20%20%3C%21--%20top%20hem%20detail%20--%3E%0A%20%20%3Cpath%20d%3D%22M92%20258%20Q150%20268%20208%20258%22%20stroke%3D%22%232A4A8A%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20opacity%3D%220.5%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20ARMS%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3C%21--%20left%20arm%20--%3E%0A%20%20%3Cpath%20d%3D%22M92%20195%20Q66%20226%2058%20278%22%20stroke%3D%22%23DCAA82%22%20stroke-width%3D%2224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M92%20195%20Q66%20226%2058%20278%22%20stroke%3D%22%232A4A8A%22%20stroke-width%3D%2228%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.85%22/%3E%0A%20%20%3Cpath%20d%3D%22M92%20195%20Q66%20226%2058%20278%22%20stroke%3D%22%23DCAA82%22%20stroke-width%3D%2220%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20left%20hand%20--%3E%0A%20%20%3Cellipse%20cx%3D%2256%22%20cy%3D%22286%22%20rx%3D%2215%22%20ry%3D%2213%22%20fill%3D%22%23DCAA82%22/%3E%0A%20%20%3Cpath%20d%3D%22M46%20282%20Q42%20274%2048%20270%22%20stroke%3D%22%23C09060%22%20stroke-width%3D%223.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M68%20282%20Q72%20274%2066%20270%22%20stroke%3D%22%23C09060%22%20stroke-width%3D%223.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%0A%20%20%3C%21--%20right%20arm%20--%3E%0A%20%20%3Cpath%20d%3D%22M208%20195%20Q234%20226%20242%20278%22%20stroke%3D%22%23DCAA82%22%20stroke-width%3D%2224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M208%20195%20Q234%20226%20242%20278%22%20stroke%3D%22%232A4A8A%22%20stroke-width%3D%2228%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20opacity%3D%220.85%22/%3E%0A%20%20%3Cpath%20d%3D%22M208%20195%20Q234%20226%20242%20278%22%20stroke%3D%22%23DCAA82%22%20stroke-width%3D%2220%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20right%20hand%20--%3E%0A%20%20%3Cellipse%20cx%3D%22244%22%20cy%3D%22286%22%20rx%3D%2215%22%20ry%3D%2213%22%20fill%3D%22%23DCAA82%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20NECK%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Crect%20x%3D%22133%22%20y%3D%22155%22%20width%3D%2234%22%20height%3D%2240%22%20rx%3D%2211%22%20fill%3D%22url%28%23skinF%29%22/%3E%0A%20%20%3Crect%20x%3D%22133%22%20y%3D%22178%22%20width%3D%2234%22%20height%3D%2217%22%20rx%3D%220%22%20fill%3D%22%23B08050%22%20opacity%3D%220.25%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20NECKLACE%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M128%20174%20Q150%20184%20172%20174%22%20stroke%3D%22%23D4A830%22%20stroke-width%3D%222.5%22%20fill%3D%22none%22/%3E%0A%20%20%3Ccircle%20cx%3D%22150%22%20cy%3D%22184%22%20r%3D%224.5%22%20fill%3D%22%23D4A830%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20HEAD%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cellipse%20cx%3D%22150%22%20cy%3D%22108%22%20rx%3D%2258%22%20ry%3D%2264%22%20fill%3D%22url%28%23skinF%29%22%20filter%3D%22url%28%23faceShadF%29%22/%3E%0A%20%20%3C%21--%20jaw%20--%3E%0A%20%20%3Cpath%20d%3D%22M96%20128%20Q98%20158%20150%20170%20Q202%20158%20204%20128%22%20fill%3D%22url%28%23skinF%29%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20EARS%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cellipse%20cx%3D%2292%22%20cy%3D%22112%22%20rx%3D%229%22%20ry%3D%2213%22%20fill%3D%22%23DCAA82%22/%3E%0A%20%20%3Cellipse%20cx%3D%2292%22%20cy%3D%22112%22%20rx%3D%224.5%22%20ry%3D%228%22%20fill%3D%22%23C09060%22%20opacity%3D%220.45%22/%3E%0A%20%20%3Cellipse%20cx%3D%22208%22%20cy%3D%22112%22%20rx%3D%229%22%20ry%3D%2213%22%20fill%3D%22%23DCAA82%22/%3E%0A%20%20%3Cellipse%20cx%3D%22208%22%20cy%3D%22112%22%20rx%3D%224.5%22%20ry%3D%228%22%20fill%3D%22%23C09060%22%20opacity%3D%220.45%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20EARRINGS%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Ccircle%20cx%3D%2292%22%20cy%3D%22120%22%20r%3D%225%22%20fill%3D%22%23D4A830%22/%3E%0A%20%20%3Ccircle%20cx%3D%2292%22%20cy%3D%22128%22%20r%3D%223.5%22%20fill%3D%22%23D4A830%22/%3E%0A%20%20%3Ccircle%20cx%3D%22208%22%20cy%3D%22120%22%20r%3D%225%22%20fill%3D%22%23D4A830%22/%3E%0A%20%20%3Ccircle%20cx%3D%22208%22%20cy%3D%22128%22%20r%3D%223.5%22%20fill%3D%22%23D4A830%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20HAIR%20%E2%80%94%20long%20straight%2C%20centre%20parted%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3C%21--%20back%20hair%20layer%20--%3E%0A%20%20%3Cpath%20d%3D%22M92%2096%20Q90%2044%20150%2034%20Q210%2044%20208%2096%20Q196%2056%20150%2050%20Q104%2056%2092%2096%20Z%22%20fill%3D%22%231E0C04%22/%3E%0A%20%20%3C%21--%20long%20side%20hair%20left%20falling%20over%20shoulder%20--%3E%0A%20%20%3Cpath%20d%3D%22M92%2096%20Q78%20130%2074%20180%20Q72%20220%2076%20260%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%2224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20long%20side%20hair%20right%20--%3E%0A%20%20%3Cpath%20d%3D%22M208%2096%20Q222%20130%20226%20180%20Q228%20220%20224%20260%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%2224%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20centre%20part%20top%20hair%20--%3E%0A%20%20%3Cpath%20d%3D%22M92%2096%20Q94%2050%20150%2036%20Q206%2050%20208%2096%20Q196%2058%20150%2052%20Q104%2058%2092%2096%20Z%22%20fill%3D%22%232A1208%22/%3E%0A%20%20%3C%21--%20hair%20shine%20--%3E%0A%20%20%3Cpath%20d%3D%22M136%2036%20Q154%2030%20172%2038%22%20stroke%3D%22%234A2010%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20opacity%3D%220.8%22/%3E%0A%20%20%3Cpath%20d%3D%22M140%2042%20Q154%2036%20170%2042%22%20stroke%3D%22%236A3418%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20opacity%3D%220.5%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20EYEBROWS%20%E2%80%94%20arched%20feminine%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M106%2084%20Q120%2077%20134%2083%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%223.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M166%2083%20Q180%2077%20194%2084%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%223.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20EYES%20%E2%80%94%20larger%2C%20expressive%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cellipse%20cx%3D%22120%22%20cy%3D%22100%22%20rx%3D%2217%22%20ry%3D%2215%22%20fill%3D%22white%22/%3E%0A%20%20%3Cellipse%20cx%3D%22180%22%20cy%3D%22100%22%20rx%3D%2217%22%20ry%3D%2215%22%20fill%3D%22white%22/%3E%0A%20%20%3C%21--%20eyelid%20crease%20--%3E%0A%20%20%3Cpath%20d%3D%22M103%2093%20Q120%2087%20137%2093%22%20stroke%3D%22%23DCAA82%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%20%20%3Cpath%20d%3D%22M163%2093%20Q180%2087%20197%2093%22%20stroke%3D%22%23DCAA82%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%20%20%3C%21--%20iris%20%E2%80%94%20warm%20brown%20--%3E%0A%20%20%3Ccircle%20cx%3D%22120%22%20cy%3D%22101%22%20r%3D%2210%22%20fill%3D%22%235C2A10%22/%3E%0A%20%20%3Ccircle%20cx%3D%22180%22%20cy%3D%22101%22%20r%3D%2210%22%20fill%3D%22%235C2A10%22/%3E%0A%20%20%3C%21--%20pupil%20--%3E%0A%20%20%3Ccircle%20cx%3D%22121%22%20cy%3D%22102%22%20r%3D%225.5%22%20fill%3D%22%230A0402%22/%3E%0A%20%20%3Ccircle%20cx%3D%22181%22%20cy%3D%22102%22%20r%3D%225.5%22%20fill%3D%22%230A0402%22/%3E%0A%20%20%3C%21--%20eye%20shine%20main%20--%3E%0A%20%20%3Ccircle%20cx%3D%22125%22%20cy%3D%2297%22%20%20r%3D%223.5%22%20fill%3D%22white%22%20opacity%3D%220.95%22/%3E%0A%20%20%3Ccircle%20cx%3D%22185%22%20cy%3D%2297%22%20%20r%3D%223.5%22%20fill%3D%22white%22%20opacity%3D%220.95%22/%3E%0A%20%20%3C%21--%20eye%20shine%20secondary%20--%3E%0A%20%20%3Ccircle%20cx%3D%22116%22%20cy%3D%22106%22%20r%3D%221.8%22%20fill%3D%22white%22%20opacity%3D%220.5%22/%3E%0A%20%20%3Ccircle%20cx%3D%22176%22%20cy%3D%22106%22%20r%3D%221.8%22%20fill%3D%22white%22%20opacity%3D%220.5%22/%3E%0A%20%20%3C%21--%20eyelashes%20top%20--%3E%0A%20%20%3Cpath%20d%3D%22M103%2094%20Q120%2088%20137%2094%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%223%22%20fill%3D%22none%22/%3E%0A%20%20%3Cpath%20d%3D%22M163%2094%20Q180%2088%20197%2094%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%223%22%20fill%3D%22none%22/%3E%0A%20%20%3C%21--%20eyelash%20flick%20left%20eye%20--%3E%0A%20%20%3Cpath%20d%3D%22M103%2095%20Q98%2090%2096%2086%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M137%2095%20Q142%2090%20144%2086%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20eyelash%20flick%20right%20eye%20--%3E%0A%20%20%3Cpath%20d%3D%22M163%2095%20Q158%2090%20156%2086%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M197%2095%20Q202%2090%20204%2086%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20lower%20lash%20--%3E%0A%20%20%3Cpath%20d%3D%22M105%20110%20Q120%20116%20135%20110%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.7%22/%3E%0A%20%20%3Cpath%20d%3D%22M165%20110%20Q180%20116%20195%20110%22%20stroke%3D%22%231E0C04%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.7%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20NOSE%20%E2%80%94%20delicate%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M144%20114%20Q140%20130%20146%20134%20Q150%20137%20154%20134%20Q160%20130%20156%20114%22%20stroke%3D%22%23B08050%22%20stroke-width%3D%221.8%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Ccircle%20cx%3D%22146%22%20cy%3D%22133%22%20r%3D%223.5%22%20fill%3D%22%23C09060%22%20opacity%3D%220.3%22/%3E%0A%20%20%3Ccircle%20cx%3D%22154%22%20cy%3D%22133%22%20r%3D%223.5%22%20fill%3D%22%23C09060%22%20opacity%3D%220.3%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20MOUTH%20%E2%80%94%20soft%20full%20lips%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cpath%20d%3D%22M128%20150%20Q150%20163%20172%20150%22%20stroke%3D%22%23C06858%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3C%21--%20upper%20lip%20--%3E%0A%20%20%3Cpath%20d%3D%22M130%20150%20Q140%20145%20150%20148%20Q160%20145%20170%20150%22%20fill%3D%22%23D07868%22%20opacity%3D%220.7%22/%3E%0A%20%20%3C%21--%20lower%20lip%20--%3E%0A%20%20%3Cpath%20d%3D%22M130%20152%20Q150%20163%20170%20152%20Q150%20168%20130%20152%20Z%22%20fill%3D%22%23D07868%22%20opacity%3D%220.55%22/%3E%0A%20%20%3C%21--%20lip%20gloss%20highlight%20--%3E%0A%20%20%3Cpath%20d%3D%22M138%20154%20Q150%20160%20162%20154%22%20stroke%3D%22white%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.3%22/%3E%0A%20%20%3C%21--%20smile%20lines%20--%3E%0A%20%20%3Cpath%20d%3D%22M126%20149%20Q122%20155%20124%20160%22%20stroke%3D%22%23B08050%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%20%20%3Cpath%20d%3D%22M174%20149%20Q178%20155%20176%20160%22%20stroke%3D%22%23B08050%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20opacity%3D%220.4%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20CHEEKS%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Cellipse%20cx%3D%22100%22%20cy%3D%22124%22%20rx%3D%2218%22%20ry%3D%2211%22%20fill%3D%22%23E89090%22%20opacity%3D%220.2%22/%3E%0A%20%20%3Cellipse%20cx%3D%22200%22%20cy%3D%22124%22%20rx%3D%2218%22%20ry%3D%2211%22%20fill%3D%22%23E89090%22%20opacity%3D%220.2%22/%3E%0A%0A%20%20%3C%21--%20%E2%94%80%E2%94%80%20BINDI%20%E2%94%80%E2%94%80%20--%3E%0A%20%20%3Ccircle%20cx%3D%22150%22%20cy%3D%2276%22%20r%3D%225%22%20fill%3D%22%23CC1040%22/%3E%0A%20%20%3Ccircle%20cx%3D%22150%22%20cy%3D%2276%22%20r%3D%222.5%22%20fill%3D%22%23FF3060%22%20opacity%3D%220.8%22/%3E%0A%3C/svg%3E';
+
+// ── AVATAR CONTROLLER ─────────────────────────────────────────────────────────
+const Avatar = {
+  _speakTimer: null,
+  _bubbleTimer: null,
+
+  init(gender) {
+    const img = document.getElementById('avatar-img');
+    img.src = gender === 'male' ? AVATAR_MALE : AVATAR_FEMALE;
+    img.className = 'avatar-img idle';
+    this.setStatus('● Listening');
+  },
+
+  setStatus(text, cls = '') {
+    const el = document.getElementById('avatar-status');
+    el.textContent = text;
+    el.className = 'avatar-status' + (cls ? ' ' + cls : '');
+  },
+
+  startSpeaking(text) {
+    const img    = document.getElementById('avatar-img');
+    const panel  = document.getElementById('avatar-panel');
+    const wave   = document.getElementById('avatar-wave');
+    const bubble = document.getElementById('speech-bubble');
+
+    img.className = 'avatar-img speaking';
+    panel.classList.add('speaking');
+    wave.classList.add('visible');
+    this.setStatus('◉ Speaking', 'speaking-status');
+
+    // Show speech bubble with trimmed text
+    const preview = text.length > 120 ? text.substring(0, 117) + '…' : text;
+    bubble.textContent = preview;
+    bubble.classList.add('visible');
+
+    // Auto-stop after estimated speech duration
+    const words    = text.split(' ').length;
+    const duration = Math.max(3000, (words / 140) * 60000 + 1500);
+    clearTimeout(this._speakTimer);
+    this._speakTimer = setTimeout(() => this.stopSpeaking(), duration);
+  },
+
+  stopSpeaking() {
+    const img    = document.getElementById('avatar-img');
+    const panel  = document.getElementById('avatar-panel');
+    const wave   = document.getElementById('avatar-wave');
+    const bubble = document.getElementById('speech-bubble');
+
+    img.className = 'avatar-img idle';
+    panel.classList.remove('speaking');
+    wave.classList.remove('visible');
+    bubble.classList.remove('visible');
+    this.setStatus('● Listening');
+  },
+
+  setThinking() {
+    this.setStatus('… Thinking', 'thinking-status');
+    const img = document.getElementById('avatar-img');
+    img.className = 'avatar-img idle';
+  },
+};
+
+// ═══════════════════════════════════════════════════
+//  SETUP — pill selection
+// ═══════════════════════════════════════════════════
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const group = pill.dataset.group;
+    document.querySelectorAll(`.pill[data-group="${group}"]`)
+            .forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    if (group === 'lang')  state.lang        = pill.dataset.val;
+    if (group === 'voice') {
+      state.voiceGender = pill.dataset.val;
+      state.voiceOn     = pill.dataset.val !== 'off';
+    }
+  });
+});
+
+document.getElementById('name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSetup();
+});
+document.getElementById('start-btn').addEventListener('click', doSetup);
+
+async function doSetup() {
+  state.name = document.getElementById('name-input').value.trim()
+             || (state.lang === 'ta' ? 'நண்பா' : 'Friend');
+
+  document.getElementById('loading').classList.add('visible');
+
+  try {
+    const res = await fetch('/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:         state.name,
+        language:     state.lang,
+        voice_gender: state.voiceGender === 'off' ? 'female' : state.voiceGender,
+        voice_on:     state.voiceOn,
+      })
+    });
+    const data = await res.json();
+
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('loading').classList.remove('visible');
+    document.getElementById('app').classList.add('visible');
+
+    // Update lang badge
+    document.getElementById('lang-badge').textContent =
+      state.lang === 'ta' ? 'தமிழ்' : 'EN';
+
+    // Update placeholder
+    document.getElementById('chat-input').placeholder =
+      state.lang === 'ta' ? 'இங்கே தட்டச்சு செய்யுங்கள்…' : 'Type here…';
+
+    Avatar.init(state.voiceGender);
+
+    // Show greeting
+    if (data.greeting) {
+      addMessage(data.greeting, 'ai');
+      Avatar.startSpeaking(data.greeting);
+    }
+
+    // Start polling
+    startPolling();
+
+  } catch(e) {
+    document.getElementById('loading').classList.remove('visible');
+    alert('Could not connect to the companion. Make sure server.py is running.');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  MESSAGING
+// ═══════════════════════════════════════════════════
+function addMessage(text, type = 'ai') {
+  const messages = document.getElementById('messages');
+
+  // Insert before typing row
+  const typingRow = document.getElementById('typing-row');
+
+  if (type === 'system') {
+    const el = document.createElement('div');
+    el.className = 'msg-row system';
+    el.innerHTML = `<span class="system-msg">${escHtml(text)}</span>`;
+    messages.insertBefore(el, typingRow);
+    scrollBottom();
+    return;
+  }
+
+  const isAI   = type === 'ai' || type === 'crisis';
+  const isCrisis = type === 'crisis';
+
+  const row = document.createElement('div');
+  row.className = `msg-row ${isAI ? 'ai' : 'user'}${isCrisis ? ' crisis-msg' : ''}`;
+
+  const now  = new Date();
+  const time = now.getHours().toString().padStart(2,'0') + ':' +
+               now.getMinutes().toString().padStart(2,'0');
+
+  row.innerHTML = `
+    <div class="msg-avatar">${isAI ? '💙' : '👤'}</div>
+    <div>
+      <div class="msg-bubble">${escHtml(text)}</div>
+      <div class="msg-time">${time}</div>
+    </div>
+  `;
+  messages.insertBefore(row, typingRow);
+  scrollBottom();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function scrollBottom() {
+  const m = document.getElementById('messages');
+  setTimeout(() => { m.scrollTop = m.scrollHeight; }, 60);
+}
+
+function showTyping(on) {
+  document.getElementById('typing-row').classList.toggle('visible', on);
+  scrollBottom();
+}
+
+function showSpeaking(on) {
+  document.getElementById('speaking-wave').classList.toggle('visible', on);
+  document.getElementById('speaking-wave-input').classList.toggle('visible', on);
+}
+
+// ═══════════════════════════════════════════════════
+//  SEND
+// ═══════════════════════════════════════════════════
+document.getElementById('send-btn').addEventListener('click', sendMessage);
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  // Exit
+  if (['quit','exit','bye','விடை','போகிறேன்'].includes(text.toLowerCase())) {
+    addMessage(text, 'user');
+    input.value = '';
+    const farewell = state.lang === 'ta'
+      ? `சரியாக கவனித்துக்கொள்ளுங்கள் ${state.name}. திரும்பி வாருங்கள்.`
+      : `Take care, ${state.name}. Real people around you love you. Come back anytime. 💙`;
+    setTimeout(() => addMessage(farewell, 'ai'), 500);
+    return;
+  }
+
+  addMessage(text, 'user');
+  input.value = '';
+
+  // If waiting for crisis reply
+  if (state.waitingReply) {
+    await fetch('/crisis_reply', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message: text })
+    });
+    return;
+  }
+
+  Avatar.setThinking();
+  showTyping(true);
+  try {
+    await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message: text })
+    });
+  } catch(e) {
+    showTyping(false);
+    addMessage('Connection error. Is the server running?', 'system');
+  }
+}
+
+async function sendCommand(cmd) {
+  await fetch('/command', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ cmd })
+  });
+  addMessage(`⚙ ${cmd}`, 'system');
+  // Update avatar gender if voice changed
+  if (cmd === 'voice female') { state.voiceGender = 'female'; Avatar.init('female'); }
+  if (cmd === 'voice male')   { state.voiceGender = 'male';   Avatar.init('male'); }
+}
+
+// ═══════════════════════════════════════════════════
+//  POLLING
+// ═══════════════════════════════════════════════════
+async function startPolling() {
+  const SKIP = ['━━━','──','📞','💬 Emergency','WhatsApp alert',
+                'translated:','✅ WhatsApp'];
+  setInterval(async () => {
+    try {
+      const res  = await fetch('/poll');
+      const data = await res.json();
+      for (const msg of data.messages) {
+        if (msg.type === 'ai') {
+          showTyping(false);
+          Avatar.stopSpeaking();
+          addMessage(msg.text, 'ai');
+          Avatar.startSpeaking(msg.text);
+        } else if (msg.type === 'crisis') {
+          showTyping(false);
+          Avatar.stopSpeaking();
+          addMessage(msg.text, 'crisis');
+          Avatar.startSpeaking(msg.text);
+        } else if (msg.type === 'crisis_on') {
+          document.getElementById('crisis-banner').classList.add('visible');
+          document.getElementById('status-text').textContent =
+            state.lang === 'ta' ? 'ஆதரவு பயன்முறை' : 'Crisis support';
+          state.inCrisis = true;
+        } else if (msg.type === 'crisis_off') {
+          document.getElementById('crisis-banner').classList.remove('visible');
+          document.getElementById('status-text').textContent = 'Online';
+          state.inCrisis = false;
+          state.waitingReply = false;
+          document.getElementById('pov-label').classList.remove('visible');
+        } else if (msg.type === 'pov_label') {
+          const lbl = document.getElementById('pov-label');
+          lbl.textContent = msg.text;
+          lbl.classList.add('visible');
+          scrollBottom();
+        } else if (msg.type === 'emergency') {
+          addMessage('🚨 Emergency alert sent to your contact.', 'system');
+        } else if (msg.type === 'waiting_reply') {
+          state.waitingReply = true;
+        } else if (msg.type === 'mic_result') {
+          showTyping(false);
+          const inp = document.getElementById('chat-input');
+          inp.value = msg.text;
+          sendMessage();
+        } else if (msg.type === 'mic_error') {
+          showTyping(false);
+          addMessage('🎤 ' + msg.text, 'system');
+        } else if (msg.type === 'print') {
+          // suppress noisy terminal prints
+        }
+      }
+    } catch(e) {}
+  }, 300);
+}
+
+// ═══════════════════════════════════════════════════
+//  MIC — Push to talk
+//  Browser sends /mic/start & /mic/stop signals only.
+//  Python (pyaudio) does ALL recording & transcription.
+//  Result arrives via /poll as mic_result or mic_error.
+//  No browser audio API, no webm, no ffmpeg needed.
+// ═══════════════════════════════════════════════════
+const micBtn = document.getElementById('mic-btn');
+
+micBtn.addEventListener('mousedown',  startRecording);
+micBtn.addEventListener('mouseup',    stopRecording);
+micBtn.addEventListener('mouseleave', stopRecording);
+micBtn.addEventListener('touchstart', e => { e.preventDefault(); startRecording(); });
+micBtn.addEventListener('touchend',   stopRecording);
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && document.activeElement !== document.getElementById('chat-input')) {
+    e.preventDefault();
+    startRecording();
+  }
+});
+document.addEventListener('keyup', e => {
+  if (e.code === 'Space') stopRecording();
+});
+
+async function startRecording() {
+  if (state.recording) return;
+  state.recording = true;
+  micBtn.classList.add('recording');
+  micBtn.textContent = '🔴';
+  document.getElementById('record-hint').classList.add('visible');
+  try {
+    await fetch('/mic/start', { method: 'POST' });
+  } catch(e) {
+    addMessage('🎤 Could not start mic. Is server running?', 'system');
+    state.recording = false;
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '🎤';
+  }
+}
+
+async function stopRecording() {
+  if (!state.recording) return;
+  state.recording = false;
+  micBtn.classList.remove('recording');
+  micBtn.textContent = '🎤';
+  document.getElementById('record-hint').classList.remove('visible');
+  try {
+    await fetch('/mic/stop', { method: 'POST' });
+    // Show transcribing indicator — result comes back via poll
+    addMessage('⏳ Transcribing…', 'system');
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════════
+document.getElementById('settings-toggle').addEventListener('click', () => {
+  document.getElementById('settings-panel').classList.toggle('open');
+});
+document.getElementById('settings-close').addEventListener('click', closeSettings);
+function closeSettings() {
+  document.getElementById('settings-panel').classList.remove('open');
+}
+</script>
+</body>
+</html>
